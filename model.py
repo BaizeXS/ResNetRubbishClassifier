@@ -1,5 +1,4 @@
 import torch
-import torchvision
 from torch import nn
 from torch.nn import functional as F
 
@@ -22,6 +21,7 @@ class ResidualBlock(nn.Module):
 
     def forward(self, x):
         shortcut = x
+        # 层间连接为虚线连接，借助下采样实现规格统一
         if self.downsample is not None:
             shortcut = self.downsample(x)
         out = self.prior(x)
@@ -35,16 +35,18 @@ class Bottleneck(nn.Module):
 
     def __init__(self, in_channel, out_channel, stride=1, downsample=None):
         super(Bottleneck, self).__init__()
-        self.seq = nn.Sequential(
+        self.prior = nn.Sequential(
+            # First
             nn.Conv2d(in_channels=in_channel, out_channels=out_channel,
                       kernel_size=1, stride=1, bias=False),
             nn.BatchNorm2d(out_channel),
             nn.ReLU(inplace=True),
-
+            # Second
             nn.Conv2d(in_channels=out_channel, out_channels=out_channel,
                       kernel_size=3, stride=stride, padding=1, bias=False),
             nn.BatchNorm2d(out_channel),
             nn.ReLU(inplace=True),
+            # Third
             nn.Conv2d(in_channels=out_channel, out_channels=out_channel * self.expansion,
                       kernel_size=1, stride=1, bias=False),
             nn.BatchNorm2d(out_channel * self.expansion)
@@ -55,7 +57,7 @@ class Bottleneck(nn.Module):
         shortcut = x
         if self.downsample is not None:
             shortcut = self.downsample(x)
-        out = self.seq(x)
+        out = self.prior(x)
         out += shortcut
         out = F.relu(out)
         return out
@@ -90,7 +92,8 @@ class ResNet(nn.Module):
         downsample = None
         if stride != 1 or self.in_channel != channel * block.expansion:
             downsample = nn.Sequential(
-                nn.Conv2d(self.in_channel, channel * block.expansion, kernel_size=1, stride=stride, bias=False),
+                nn.Conv2d(self.in_channel, channel * block.expansion,
+                          kernel_size=1, stride=stride, bias=False),
                 nn.BatchNorm2d(channel * block.expansion)
             )
         layers = []
@@ -115,16 +118,20 @@ class ResNet(nn.Module):
 
 
 def resnet18(num_classes, include_top=True):
-    return ResNet(ResidualBlock, [2, 2, 2, 2], num_classes=num_classes, include_top=include_top)
+    return ResNet(ResidualBlock, [2, 2, 2, 2],
+                  num_classes=num_classes, include_top=include_top)
 
 
 def resnet34(num_classes, include_top=True):
-    return ResNet(ResidualBlock, [3, 4, 6, 3], num_classes=num_classes, include_top=include_top)
+    return ResNet(ResidualBlock, [3, 4, 6, 3],
+                  num_classes=num_classes, include_top=include_top)
 
 
 def resnet50(num_classes, include_top=True):
-    return ResNet(Bottleneck, [3, 4, 6, 3], num_classes=num_classes, include_top=include_top)
+    return ResNet(Bottleneck, [3, 4, 6, 3],
+                  num_classes=num_classes, include_top=include_top)
 
 
 def resnet101(num_classes, include_top=True):
-    return ResNet(Bottleneck, [3, 4, 23, 3], num_classes=num_classes, include_top=include_top)
+    return ResNet(Bottleneck, [3, 4, 23, 3],
+                  num_classes=num_classes, include_top=include_top)
