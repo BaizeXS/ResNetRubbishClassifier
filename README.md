@@ -9,9 +9,31 @@
 
 ## 实验设计
 
+- Dataset dataloader 设计
 
+  http://t.csdn.cn/KNH6Q
+
+  http://t.csdn.cn/MwX0t
+
+  改进：
+
+  - 路径、transform、loader、resize
+
+- BN
+
+  ![image-20221125152739263](../Typora/image-20221125152739263.png)
+
+- relu inplace参数
+
+- res34（主要）
+
+- Res50
 
 ## 方法描述
+
+![image-20221124232729126](../Typora/image-20221124232729126.png)
+
+![../_images/resnet18.svg](https://zh-v2.d2l.ai/_images/resnet18.svg)
 
 
 
@@ -58,10 +80,6 @@
     Use Resize and Single Central Crop while training, and use Multiple Crop while testing.
 
     Btw, we choose while training so that we can learn more features from the center of a pic as we choose pic containing item that is in the center.  
-
-  - SPP-Net
-
-    何凯明
 
   - normalize
 
