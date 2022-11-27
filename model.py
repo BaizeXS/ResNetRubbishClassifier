@@ -21,12 +21,15 @@ class ResidualBlock(nn.Module):
 
     def forward(self, x):
         shortcut = x
+
         # 层间连接为虚线连接，借助下采样实现规格统一
         if self.downsample is not None:
             shortcut = self.downsample(x)
+
         out = self.prior(x)
         out += shortcut
         out = F.relu(out)
+
         return out
 
 
@@ -55,19 +58,24 @@ class Bottleneck(nn.Module):
 
     def forward(self, x):
         shortcut = x
+
+        # 层间连接为虚线连接，借助下采样实现规格统一
         if self.downsample is not None:
             shortcut = self.downsample(x)
+
         out = self.prior(x)
         out += shortcut
         out = F.relu(out)
+
         return out
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, blocks_num, num_classes, include_top=True):
+    def __init__(self, block, blocks_num, num_classes=1000, include_top=True):
         super(ResNet, self).__init__()
         self.include_top = include_top
         self.in_channel = 64
+
         self.pre = nn.Sequential(
             nn.Conv2d(in_channels=3, out_channels=self.in_channel,
                       kernel_size=7, stride=2, padding=3, bias=False),
@@ -96,12 +104,14 @@ class ResNet(nn.Module):
                           kernel_size=1, stride=stride, bias=False),
                 nn.BatchNorm2d(channel * block.expansion)
             )
+
         layers = []
         layers.append(block(self.in_channel, channel, downsample=downsample, stride=stride))
-        self.in_channel = channel * block.expansion
 
+        self.in_channel = channel * block.expansion
         for _ in range(1, blocks_num):
             layers.append(block(self.in_channel, channel))
+
         return nn.Sequential(*layers)
 
     def forward(self, x):
@@ -110,28 +120,30 @@ class ResNet(nn.Module):
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
+
         if self.include_top:
             x = self.avgpool(x)
             x = torch.flatten(x, 1)
             x = self.fc(x)
+
         return x
 
 
-def resnet18(num_classes, include_top=True):
+def resnet18(num_classes=1000, include_top=True):
     return ResNet(ResidualBlock, [2, 2, 2, 2],
                   num_classes=num_classes, include_top=include_top)
 
 
-def resnet34(num_classes, include_top=True):
+def resnet34(num_classes=1000, include_top=True):
     return ResNet(ResidualBlock, [3, 4, 6, 3],
                   num_classes=num_classes, include_top=include_top)
 
 
-def resnet50(num_classes, include_top=True):
+def resnet50(num_classes=1000, include_top=True):
     return ResNet(Bottleneck, [3, 4, 6, 3],
                   num_classes=num_classes, include_top=include_top)
 
 
-def resnet101(num_classes, include_top=True):
+def resnet101(num_classes=1000, include_top=True):
     return ResNet(Bottleneck, [3, 4, 23, 3],
                   num_classes=num_classes, include_top=include_top)
