@@ -130,6 +130,7 @@ for i in range(epochs):
     # Save the Model
     torch.save(net, save_path + "/ResNetModels/ResNet{}.pth".format(i))
     print("模型已保存")
+
 # 9. 绘制图像
 plt.figure(figsize=(12, 4))
 
